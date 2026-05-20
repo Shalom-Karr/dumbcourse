@@ -305,6 +305,40 @@ after_initialize do
 
   reloadable_patch { ::Guardian.prepend(DiscourseModCategories::GuardianExtensions) }
 
+  # Clearing the unread count when a mod-note notification is opened from
+  # the bell. Our `mod_note_unread_count` is keyed off the user's
+  # `mod_notes_seen_at` custom field (compared to topic activity
+  # timestamps), so flipping `Notification.read = true` on its own does
+  # not move that needle. This callback bridges the gap: when the bell
+  # marks one of OUR notifications read, advance seen_at and publish a
+  # reset so the avatar pip / title prefix clear in lockstep — matching
+  # what /notes-feed/seen does when the shield tab is opened.
+  reloadable_patch do
+    ::Notification.class_eval do
+      after_save do
+        next unless saved_change_to_read? && read?
+        next unless notification_type == ::Notification.types[:custom]
+        data_str = self[:data].to_s
+        next unless data_str.include?("\"mod_note\":true")
+
+        owner = user
+        next unless owner
+
+        owner.custom_fields[
+          DiscourseModCategories::USER_NOTES_SEEN_FIELD
+        ] = Time.zone.now.iso8601
+        owner.save_custom_fields(true)
+
+        MessageBus.publish(
+          "/mod-note-unread-count/#{owner.id}",
+          { reset: true },
+          user_ids: [owner.id],
+        )
+        owner.publish_notifications_state
+      end
+    end
+  end
+
   register_topic_custom_field_type(DiscourseModCategories::TOPIC_FOOTER_FIELD, :string)
   register_topic_custom_field_type(DiscourseModCategories::TOPIC_REPLY_PROMPT_FIELD, :string)
   register_topic_custom_field_type(DiscourseModCategories::TOPIC_PINNED_POST_FIELD, :integer)

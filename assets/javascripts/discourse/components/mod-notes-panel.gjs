@@ -1,5 +1,8 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
+import { on } from "@ember/modifier";
+import { action } from "@ember/object";
+import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
 import icon from "discourse/helpers/d-icon";
 import { ajax } from "discourse/lib/ajax";
@@ -17,6 +20,31 @@ export default class ModNotesPanel extends Component {
   constructor() {
     super(...arguments);
     this.load();
+  }
+
+  // Close the user menu when the staff member clicks a note. The bare
+  // `<a href>` navigates outside Ember's router, so the panel doesn't
+  // get torn down by a route transition — the menu otherwise stays
+  // pinned open and has to be slid away manually.
+  @action
+  closeUserMenu() {
+    const owner = getOwner(this);
+    const userMenu =
+      owner?.lookup?.("service:user-menu") ||
+      owner?.lookup?.("service:userMenu");
+    if (typeof userMenu?.close === "function") {
+      userMenu.close();
+      return;
+    }
+    // Older Discourse versions exposed the toggler on the header service.
+    const header =
+      owner?.lookup?.("service:header") ||
+      owner?.lookup?.("service:header-state");
+    if (typeof header?.hideUserMenu === "function") {
+      header.hideUserMenu();
+    } else if (typeof header?.toggleUserMenu === "function") {
+      header.toggleUserMenu();
+    }
   }
 
   async load() {
@@ -52,7 +80,11 @@ export default class ModNotesPanel extends Component {
               class="mod-notes-item
                 {{if note.unread 'mod-notes-item--unread'}}"
             >
-              <a href={{note.url}} class="mod-notes-item-link">
+              <a
+                href={{note.url}}
+                class="mod-notes-item-link"
+                {{on "click" this.closeUserMenu}}
+              >
                 {{icon "shield-halved"}}
                 <span class="mod-notes-item-body">
                   <span class="mod-notes-item-title">
