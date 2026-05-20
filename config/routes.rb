@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# --- dumbcourse engine routes ---
 DiscourseDumbcourse::Engine.routes.draw do
   post "/hcaptcha" => "app#hcaptcha"
 
@@ -32,22 +33,7 @@ DiscourseDumbcourse::Engine.routes.draw do
       end
 end
 
-class DiscourseDumbcourseBasePathConstraint
-  def matches?(req)
-    req.params[:dumbcourse_base_path].to_s == DiscourseDumbcourse.base_path
-  end
-end
-
-Discourse::Application.routes.draw do
-  constraints DiscourseDumbcourseBasePathConstraint.new do
-    scope "/:dumbcourse_base_path",
-          defaults: { dumbcourse_base_path: DiscourseDumbcourse.base_path } do
-      mount ::DiscourseDumbcourse::Engine, at: "/"
-    end
-  end
-end
-
-# --- discourse-mod ---
+# --- discourse-mod engine routes ---
 DiscourseModCategories::Engine.routes.draw do
   put "/topic/:topic_id" => "messages#update_topic"
   put "/category/:category_id" => "messages#update_category"
@@ -72,6 +58,23 @@ DiscourseModCategories::Engine.routes.draw do
   delete "/topic/:topic_id/prompt-checklist" => "checklist#delete_topic"
 end
 
+class DiscourseDumbcourseBasePathConstraint
+  def matches?(req)
+    req.params[:dumbcourse_base_path].to_s == DiscourseDumbcourse.base_path
+  end
+end
+
+# Single Discourse::Application.routes.draw block — Rails reloads routes by
+# replaying every draw block, so duplicating `Discourse::Application.routes.draw`
+# in a plugin's routes.rb double-mounts the engines and trips
+# `ArgumentError: Invalid route name, already in use`.
 Discourse::Application.routes.draw do
+  constraints DiscourseDumbcourseBasePathConstraint.new do
+    scope "/:dumbcourse_base_path",
+          defaults: { dumbcourse_base_path: DiscourseDumbcourse.base_path } do
+      mount ::DiscourseDumbcourse::Engine, at: "/"
+    end
+  end
+
   mount ::DiscourseModCategories::Engine, at: "discourse-mod-categories"
 end
