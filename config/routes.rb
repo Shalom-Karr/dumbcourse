@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
-# --- dumbcourse engine routes ---
+# Routes for the DiscourseDumbcourse engine.
+#
+# The DiscourseModCategories engine has its own routes file at
+# discourse-mod/config/routes.rb (wired in via config.paths on its
+# Engine class in plugin.rb). Keeping the two engines' routes in
+# separate files prevents Rails' routes_reloader from loading the
+# same file twice and re-mounting either engine.
 DiscourseDumbcourse::Engine.routes.draw do
   post "/hcaptcha" => "app#hcaptcha"
 
@@ -33,41 +39,12 @@ DiscourseDumbcourse::Engine.routes.draw do
       end
 end
 
-# --- discourse-mod engine routes ---
-DiscourseModCategories::Engine.routes.draw do
-  put "/topic/:topic_id" => "messages#update_topic"
-  put "/category/:category_id" => "messages#update_category"
-  post "/topic/:topic_id/note-reply" => "messages#add_note_reply"
-  put "/topic/:topic_id/note-reply" => "messages#update_note_reply"
-  delete "/topic/:topic_id/note-reply" => "messages#delete_note_reply"
-  delete "/topic/:topic_id/note" => "messages#delete_note"
-  post "/topic/:topic_id/whisper-participant" =>
-         "messages#add_whisper_participant"
-  get "/notes-feed" => "messages#notes_feed"
-  post "/notes-feed/seen" => "messages#notes_feed_seen"
-  get "/checklist" => "checklist#show"
-  get "/checklist/owed" => "checklist#owed"
-  put "/checklist" => "checklist#update"
-  post "/checklist/accept" => "checklist#accept"
-  post "/checklist/require-reaccept" => "checklist#require_reaccept"
-  post "/checklist/targeted" => "checklist#create_targeted"
-  put "/checklist/targeted/:id" => "checklist#update_targeted"
-  delete "/checklist/targeted/:id" => "checklist#delete_targeted"
-  get "/topic/:topic_id/prompt-checklist" => "checklist#show_topic"
-  put "/topic/:topic_id/prompt-checklist" => "checklist#update_topic"
-  delete "/topic/:topic_id/prompt-checklist" => "checklist#delete_topic"
-end
-
 class DiscourseDumbcourseBasePathConstraint
   def matches?(req)
     req.params[:dumbcourse_base_path].to_s == DiscourseDumbcourse.base_path
   end
 end
 
-# Single Discourse::Application.routes.draw block — Rails reloads routes by
-# replaying every draw block, so duplicating `Discourse::Application.routes.draw`
-# in a plugin's routes.rb double-mounts the engines and trips
-# `ArgumentError: Invalid route name, already in use`.
 Discourse::Application.routes.draw do
   constraints DiscourseDumbcourseBasePathConstraint.new do
     scope "/:dumbcourse_base_path",
@@ -75,6 +52,4 @@ Discourse::Application.routes.draw do
       mount ::DiscourseDumbcourse::Engine, at: "/"
     end
   end
-
-  mount ::DiscourseModCategories::Engine, at: "discourse-mod-categories"
 end

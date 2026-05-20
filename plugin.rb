@@ -244,6 +244,15 @@ module ::DiscourseModCategories
   class Engine < ::Rails::Engine
     engine_name "discourse_mod_categories"
     isolate_namespace DiscourseModCategories
+
+    # Override the engine's routes file location so it does not collide
+    # with dumbcourse's config/routes.rb at the plugin root. Without this,
+    # both engines would load the SAME plugin-root config/routes.rb (their
+    # Engine.root is identical), redrawing every route and re-mounting
+    # both engines twice on each routes-reloader pass — Rails then raises
+    # 'Invalid route name, already in use: discourse_dumbcourse'.
+    config.paths["config/routes.rb"] =
+      File.expand_path("discourse-mod/config/routes.rb", __dir__)
   end
 end
 
