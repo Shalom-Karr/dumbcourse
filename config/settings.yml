@@ -76,3 +76,21 @@ plugins:
   dumbcourse_languagetool_api_key:
     default: ""
     client: false
+
+# --- discourse-mod ---
+discourse_mod_categories:
+  mod_categories_enabled:
+    default: false
+    client: true
+  precheck_new_topic_enabled:
+    default: true
+    client: true
+  topic_footer_message_enabled:
+    default: true
+    client: true
+  topic_reply_prompt_enabled:
+    default: true
+    client: true
+  mod_whisper_enabled:
+    default: true
+    client: true
