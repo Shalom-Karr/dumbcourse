@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# name: discourse-dumbcourse
+# name: dumbcourse
 # about: Dumbcourse SPA under /dumb with push notifications, plus forum-moderator workflow features (categories, footer messages, prompts, checklists, whisper, private notes)
 # version: 0.3.0
 # authors: Shalom Karr, Usher Weiss, Avrumi Sternheim
@@ -11,7 +11,7 @@
 # DUMBCOURSE — unchanged from upstream
 # =============================================================================
 module ::DiscourseDumbcourse
-  PLUGIN_NAME = "discourse-dumbcourse"
+  PLUGIN_NAME = "dumbcourse"
 
   def self.base_path
     path = SiteSetting.dumbcourse_base_path.to_s.strip
