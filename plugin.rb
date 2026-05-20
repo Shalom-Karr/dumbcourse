@@ -51,9 +51,9 @@ require_relative "lib/discourse_dumbcourse/push_sender"
 require_relative "discourse-mod/lib/discourse_mod_categories/guardian_extensions"
 require_relative "discourse-mod/lib/discourse_mod_categories/whisper_query_filter"
 
-register_asset "discourse-mod/assets/stylesheets/topic-footer-message.scss"
-register_asset "discourse-mod/assets/stylesheets/whisper.scss"
-register_asset "discourse-mod/assets/stylesheets/mod-note-header-pip.scss"
+register_asset "stylesheets/topic-footer-message.scss"
+register_asset "stylesheets/whisper.scss"
+register_asset "stylesheets/mod-note-header-pip.scss"
 
 register_svg_icon "list-check"
 register_svg_icon "shield-halved"
